@@ -1,0 +1,10 @@
+#! /bin/sh
+
+# Mark all migrations as pending
+mkdir -p /var/gluon/migrations
+for FILE in /lib/gluon/migrations/*; do
+	ln -s "${FILE}" /var/gluon/migrations
+done
+
+# Initialli execute outstanding migrations
+/usr/sbin/migrator

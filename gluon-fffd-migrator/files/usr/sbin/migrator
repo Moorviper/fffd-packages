@@ -1,0 +1,30 @@
+#!/usr/bin/lua
+
+local fs = require 'nixio.fs'
+local util = require 'gluon.util'
+
+-- Get the current time (in format YYYY-MM-DD (same as file prefixes)
+local today = os.date('%Y-%m-%d')
+
+-- Lock to prevent parallel migrations
+util.lock('/var/lock/migrations.lock')
+
+-- Get all remaining migrations
+for file in fs.dir('/var/gluon/migrations') do
+	-- Split the filename into date and ID
+	local date, id = file:match('^(%d%d%d%d%-%d%d%-%d%d)-(.+)$')
+
+	-- Check if filename is valid and migration should be executed
+	if date ~= nil and date <= today then
+		local file = '/var/gluon/migrations/' .. file
+
+		-- Execute migration
+		util.exec(file)
+
+		-- Delete the migration file
+		fs.remove(file)
+	end
+end
+
+-- Unlock the migrations tool
+util.unlock('/var/lock/migrations.lock')
